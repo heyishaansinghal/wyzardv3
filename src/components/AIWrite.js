@@ -15,7 +15,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 export default function AIWrite({ aiActive, setAiActive, textContent }) {
-  const { isOpen, onOpen, onClose } = useDisclosure({ defaultIsOpen: true });
+  const { isOpen, onClose } = useDisclosure({ defaultIsOpen: true });
   const [aiText, setAiText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -34,9 +34,6 @@ export default function AIWrite({ aiActive, setAiActive, textContent }) {
   }
 
   async function getAIText(userContent) {
-    const localStorageData = JSON.parse(localStorage.getItem("prompts"));
-    const configSettings = JSON.parse(localStorage.getItem("configSettings"));
-
     const promptToUse =
       "Forget Everything and Summarize this text for SEO And Clarity";
     const apiKey = "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";
