@@ -110,7 +110,7 @@ const EditablePage = ({ postId, username, password, onClose }) => {
       .catch((error) => {
         console.error("Error:", error);
       });
-  }, [postId]);
+  }, [postId, username, password]);
 
   useEffect(() => {
     if (copiedContent) {
