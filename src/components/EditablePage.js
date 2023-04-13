@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import {
   Box,
   Button,
+  Flex,
   useColorModeValue,
   VStack,
   HStack,
@@ -11,67 +12,6 @@ import {
   SkeletonText,
 } from "@chakra-ui/react";
 import AIWrite from "./AIWrite";
-const configSettings = JSON.parse(localStorage.getItem("configSettings"));
-
-const fetchPostContent = async (postId, username, password) => {
-  try {
-    const authString = `${username}:${password}`;
-    const base64AuthString = btoa(authString);
-
-    const response = await fetch(
-      `https://${configSettings.domain}/wp-json/wp/v2/posts/${postId}`,
-      {
-        headers: {
-          Authorization: `Basic ${base64AuthString}`,
-        },
-      }
-    );
-
-    const post = await response.json();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(post.content.rendered, "text/html");
-
-    const title = post.title.rendered;
-    const headings = Array.from(doc.querySelectorAll("h1, h2, h3, h4, h5, h6"));
-    const postContent = Array.from(doc.querySelectorAll("p, img, iframe"));
-
-    // Process media elements
-    postContent.forEach((el, index) => {
-      if (el.tagName === "IMG" || el.tagName === "IFRAME") {
-        el.style.maxWidth = "100%";
-      } else if (el.tagName === "P") {
-        const wrappedEl = document.createElement("div");
-        wrappedEl.innerHTML = `<grammarly-editor-plugin>${el.outerHTML}</grammarly-editor-plugin>`;
-        postContent[index] = wrappedEl;
-      }
-    });
-
-    // Create a new container element and append the desired elements
-    const contentContainer = document.createElement("div");
-    const titleElement = contentContainer.appendChild(
-      document.createElement("h1")
-    );
-    titleElement.innerHTML = title;
-    titleElement.style.fontWeight = "bold";
-    titleElement.style.textAlign = "center";
-    titleElement.style.marginBottom = "10px";
-
-    headings.forEach((heading) => contentContainer.appendChild(heading));
-    postContent.forEach((content) => contentContainer.appendChild(content));
-
-    // Apply styles to justify and format text
-    contentContainer.querySelectorAll("p").forEach((p) => {
-      p.style.textAlign = "justify";
-      p.style.margin = "1em 0";
-      p.style.lineHeight = "1.5";
-    });
-
-    // Return the inner HTML of the container element
-    return contentContainer.innerHTML;
-  } catch (error) {
-    throw new Error("Failed to fetch post content");
-  }
-};
 
 const EditablePage = ({ postId, username, password, onClose }) => {
   const [copiedContent, setCopiedContent] = useState(null);
@@ -79,6 +19,7 @@ const EditablePage = ({ postId, username, password, onClose }) => {
   const [textContent, setTextContent] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const contentRef = useRef();
+  let configSettings = JSON.parse(localStorage.getItem("configSettings"));
 
   // Add new state for the selected paragraph text
   const [selectedParagraphText, setSelectedParagraphText] = useState("");
@@ -88,8 +29,70 @@ const EditablePage = ({ postId, username, password, onClose }) => {
     y: 0,
   });
 
+  const fetchPostContent = async (postId) => {
+    try {
+      const authString = `${username}:${password}`;
+      const base64AuthString = btoa(authString);
+
+      const response = await fetch(
+        `https://${configSettings.domain}/wp-json/wp/v2/posts/${postId}`,
+        {
+          headers: {
+            Authorization: `Basic ${base64AuthString}`,
+          },
+        }
+      );
+
+      const post = await response.json();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(post.content.rendered, "text/html");
+
+      const title = post.title.rendered;
+      const headings = Array.from(
+        doc.querySelectorAll("h1, h2, h3, h4, h5, h6")
+      );
+      const postContent = Array.from(doc.querySelectorAll("p, img, iframe"));
+
+      // Process media elements
+      postContent.forEach((el, index) => {
+        if (el.tagName === "IMG" || el.tagName === "IFRAME") {
+          el.style.maxWidth = "100%";
+        } else if (el.tagName === "P") {
+          const wrappedEl = document.createElement("div");
+          wrappedEl.innerHTML = `<grammarly-editor-plugin>${el.outerHTML}</grammarly-editor-plugin>`;
+          postContent[index] = wrappedEl;
+        }
+      });
+
+      // Create a new container element and append the desired elements
+      const contentContainer = document.createElement("div");
+      const titleElement = contentContainer.appendChild(
+        document.createElement("h1")
+      );
+      titleElement.innerHTML = title;
+      titleElement.style.fontWeight = "bold";
+      titleElement.style.textAlign = "center";
+      titleElement.style.marginBottom = "10px";
+
+      headings.forEach((heading) => contentContainer.appendChild(heading));
+      postContent.forEach((content) => contentContainer.appendChild(content));
+
+      // Apply styles to justify and format text
+      contentContainer.querySelectorAll("p").forEach((p) => {
+        p.style.textAlign = "justify";
+        p.style.margin = "1em 0";
+        p.style.lineHeight = "1.5";
+      });
+
+      // Return the inner HTML of the container element
+      return contentContainer.innerHTML;
+    } catch (error) {
+      throw new Error("Failed to fetch post content");
+    }
+  };
+
   useEffect(() => {
-    fetchPostContent(postId, username, password)
+    fetchPostContent(postId)
       .then((content) => {
         setCopiedContent(content);
         setIsLoading(false);
@@ -110,7 +113,7 @@ const EditablePage = ({ postId, username, password, onClose }) => {
       .catch((error) => {
         console.error("Error:", error);
       });
-  }, [postId, username, password]);
+  }, [postId]);
 
   useEffect(() => {
     if (copiedContent) {

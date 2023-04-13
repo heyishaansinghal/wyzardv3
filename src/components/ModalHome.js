@@ -15,8 +15,12 @@ import {
   ModalBody,
   ModalFooter,
   ModalCloseButton,
+  Container,
   useToast,
+  IconButton,
+  Icon,
 } from "@chakra-ui/react";
+import { WarningIcon } from "@chakra-ui/icons";
 import { useState, useEffect } from "react";
 import { fetchPostsAndPages } from "./Workers/fetchingPage";
 import WorkerModal from "./WorkerModal";

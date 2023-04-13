@@ -64,6 +64,7 @@ function App() {
   const [isVerified, setIsVerified] = useState(
     JSON.parse(localStorage.getItem("configSettings"))
   );
+  let configSettings = JSON.parse(localStorage.getItem("configSettings"));
   const toast = useToast();
   console.log(isVerified);
 
